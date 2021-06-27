@@ -6,6 +6,10 @@
 //init
 #undef USE_STDIN
 
+#define CONFIG_I2C_MASTER_SCL 23
+#define CONFIG_I2C_MASTER_SDA 18
+#define CONFIG_LCD1602_I2C_ADDRESS 0x27
+
 //some i2c standard defines
 #define I2C_MASTER_NUM           I2C_NUM_0
 #define I2C_MASTER_TX_BUF_LEN    0                     // disabled
@@ -59,3 +63,9 @@ i2c_lcd1602_info_t* lcd_init(void);
 menu_t* menu_create_menu(void);
 void menu_free_all(menu_t* menu);
 void menu_welcome_message(menu_t* menu);
+void menu_display_menu(menu_t* menu);
+void menu_handle_key_event(menu_t* menu);
+void menu_display_top_scores(menu_t* menu);
+
+void menu_create_custom_characters(void);
+#endif
