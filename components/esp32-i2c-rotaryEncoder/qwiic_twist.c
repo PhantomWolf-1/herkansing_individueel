@@ -339,3 +339,12 @@ esp_err_t qwiic_twist_stop_task(qwiic_twist_t* config) {
 	ESP_LOGI(TAG, "Stopping task");
 	return ESP_OK;
 }
+
+
+void qwiic_twist_free_all(qwiic_twist_t* info){
+	free(info->smbus_info);
+	info->smbus_info = NULL;
+	free(info);
+	info = NULL;
+
+}

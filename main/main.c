@@ -4,15 +4,18 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
+#include "time.h"
 
 #include "qwiic_twist.h"
 #include "menu.h"
+#include "game.h"
 
 
 #define MAINTAG "MAIN"
 
 qwiic_twist_t* qwiic_twist_rotary;
 menu_t* menu;
+game_t* gameInfo;
 
 void rotary_task(void *);
 void clicked(void);
@@ -45,28 +48,21 @@ void set_rotary_encoder(void){
     qwiic_twist_rotary->onButtonPressed = &pressed;
     qwiic_twist_rotary->onMoved = &onMove;
     qwiic_twist_init(qwiic_twist_rotary);
-
 }
 
+void set_game_info(void){
+    gameInfo = game_create_game();
+}
 
-void hello_task(void *pvParameter)
-{
-    printf("Hello world!\n");
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_RATE_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
-    vTaskDelete(NULL);
+void free_all(){
+    menu_free_all(menu);
+    qwiic_twist_free_all(qwiic_twist_rotary);
+    //game shit free
 }
 
 void menu_task(void* pvParameter){
-    // start the menu task in the menu.c
-    // dont forget the memory management!!!
     menu = menu_create_menu();
-    menu_display_menu(menu);
+    menu_display_menu(menu, gameInfo);
 
     qwiic_twist_start_task(qwiic_twist_rotary);
 
@@ -83,9 +79,11 @@ void app_main()
     ESP_ERROR_CHECK(nvs_flash_init());
     //nvs_flash_init();
     i2c_master_init();
-    set_rotary_encoder();
+    srand(time(0));
 
-    //xTaskCreate(&hello_task, "hello_task", 2048, NULL, 5, NULL);
+    set_rotary_encoder();
+    set_game_info();
+
     xTaskCreate(&menu_task, "menu_task", 2048, NULL, 5, NULL);
 }
 
@@ -96,7 +94,7 @@ void app_main()
  */
 void clicked(void){
     ESP_LOGI(MAINTAG, "clicked rotary encoder");
-    menu_handle_key_event(menu, KEY_CLICKED);
+    menu_handle_key_event(menu, KEY_CLICKED, gameInfo);
 }
 
 /*
@@ -112,9 +110,9 @@ void pressed(void){
 void onMove(int16_t move_value){
     ESP_LOGI(MAINTAG, "moving...");
     if(move_value > 0){
-        menu_handle_key_event(menu, KEY_RIGHT);
+        menu_handle_key_event(menu, KEY_RIGHT, gameInfo);
     }
     else if(move_value < 0){
-        menu_handle_key_event(menu, KEY_LEFT);
+        menu_handle_key_event(menu, KEY_LEFT, gameInfo);
     }
 }

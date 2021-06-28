@@ -4,7 +4,9 @@
 #include <stdio.h>
 
 #include "menu.h"
+#include "game.h"
 
+#include "esp_log.h"
 
 #define MENU_TAG "MENU"
 
@@ -32,7 +34,7 @@ i2c_lcd1602_info_t* lcd_init(void){
 
     // turn on cursor 
     //ESP_LOGI(MENU_TAG, "cursor on");
-    i2c_lcd1602_set_cursor(lcd_info, true);
+    i2c_lcd1602_set_cursor(lcd_info, false);
 
     return lcd_info;
 }
@@ -41,19 +43,19 @@ menu_t* menu_create_menu(void){
     menu_t* tempMenuPointer = malloc(sizeof(menu_t));
 
     menu_item_t mainItems[MAX_MAIN_MENU_ITEMS] = {
-        {MAIN_MENU_ID_0, MAIN, GAME, "PLAY", {NULL, NULL, NULL}},
-        {MAIN_MENU_ID_1, MAIN, SCORE, "SCORES", {NULL, NULL, NULL}}
+        {MAIN_MENU_ID_0, MAIN, GAME, "PLAY", NULL},
+        {MAIN_MENU_ID_1, MAIN, SCORE, "H-SCORE", NULL}
     }; 
 
     menu_item_t gameItems[MAX_GAME_MENU_ITEMS] = {
-        {GAME_MENU_ID_0, GAME, GAME, "ROCK", {NULL, NULL, NULL}},
-        {GAME_MENU_ID_1, GAME, GAME, "PAPER", {NULL, NULL, NULL}},
-        {GAME_MENU_ID_2, GAME, GAME, "SCISSORS", {NULL, NULL, NULL}},
-        {GAME_MENU_ID_3, GAME, MAIN, "BACK", {NULL, NULL, NULL}}
+        {GAME_MENU_ID_0, GAME, GAME, "ROCK", NULL},
+        {GAME_MENU_ID_1, GAME, GAME, "PAPER", NULL},
+        {GAME_MENU_ID_2, GAME, GAME, "SCISSORS", NULL},
+        {GAME_MENU_ID_3, GAME, MAIN, "BACK", NULL}
     };
 
     menu_item_t scoreItems[MAX_SCORE_MENU_ITEMS] = {
-        {SCORE_MENU_ID_0, SCORE, MAIN, "BACK", {NULL, NULL, NULL}}
+        {SCORE_MENU_ID_0, SCORE, MAIN, "BACK", NULL}
     };
 
     i2c_lcd1602_info_t* lcdInfo = lcd_init();
@@ -81,7 +83,17 @@ menu_t* menu_create_menu(void){
 }
 
 void menu_free_all(menu_t* menu){
-
+    free(menu->lcdInfo);
+    menu->lcdInfo = NULL;
+    free(menu->mainMenuItems);
+    menu->mainMenuItems = NULL;
+    free(menu->gameMenuItems);
+    menu->gameMenuItems = NULL;
+    free(menu->scoreMenuItems);
+    menu->scoreMenuItems = NULL;
+    free(menu);
+    menu = NULL;
+    
 }
 
 void menu_write_menu_title(i2c_lcd1602_info_t* lcdInfo, enum menuType type)
@@ -98,7 +110,7 @@ void menu_write_menu_title(i2c_lcd1602_info_t* lcdInfo, enum menuType type)
             break;
 
         case SCORE:
-            i2c_lcd1602_write_string(lcdInfo, "*SCORES*");
+            i2c_lcd1602_write_string(lcdInfo, "*H-SCORE*");
             break;
     
         default:
@@ -161,7 +173,7 @@ void menu_welcome_message(menu_t* menu){
 
 }
 
-void menu_display_menu(menu_t* menu){
+void menu_display_menu(menu_t* menu, game_t* gameInfo){
 
     i2c_lcd1602_clear(menu->lcdInfo);
     menu_write_menu_title(menu->lcdInfo, menu->currentMenu);
@@ -180,7 +192,10 @@ void menu_display_menu(menu_t* menu){
             break;
 
         case SCORE:
-            
+        menu_write_text_on_position(menu->lcdInfo, toString(gameInfo->highScore), SCORE_LIST_COLUMN, SCORE_LIST_ROW);
+            // for(int i = 0; i < MAX_AMOUNT_OF_SCORES; i++){
+            //     menu_write_text_on_position(menu->lcdInfo, gameInfo->maxScores[i], SCORE_LIST_COLUMN, SCORE_LIST_ROW + i);
+            // }
             break;
         
         default:
@@ -189,9 +204,58 @@ void menu_display_menu(menu_t* menu){
 
 }
 
+void menu_display_outcome(menu_t* menu, enum choiceType myChoice, game_t* gameInfo){
+    enum choiceType enemyChoice = game_get_choice_PC();
+    enum outcome result = game_check_outcome(myChoice, enemyChoice);
+    //ESP_LOGI(MENU_TAG, "My choice: %d", myChoice);
+    //ESP_LOGI(MENU_TAG, "enemy choice: %d", enemyChoice);
+    i2c_lcd1602_clear(menu->lcdInfo);
+
+    menu_write_text_on_position(menu->lcdInfo, PLAYER_RESULT_TEXT, PLAYER_RESULT_TEXT_POS_COLUMN, PLAYER_RESULT_TEXT_POS_ROW);
+    menu_write_text_on_position(menu->lcdInfo, game_get_text_of_enum_choice(myChoice), PLAYER_CHOICE_POS_COLUMN, PLAYER_CHOICE_POS_ROW);
+    menu_write_text_on_position(menu->lcdInfo, FOE_RESULT_TEXT, FOE_RESULT_TEXT_POS_COLUMN, FOE_RESULT_TEXT_POS_ROW);
+    menu_write_text_on_position(menu->lcdInfo, game_get_text_of_enum_choice(enemyChoice), FOE_CHOICE_POS_COLUMN, FOE_CHOICE_POS_ROW);
+    
+    menu_write_text_on_position(menu->lcdInfo, RESULT_GAME_TEXT, RESULT_GAME_TEXT_POS_COLUMN, RESULT_GAME_TEXT_POS_ROW);
+    menu_write_text_on_position(menu->lcdInfo, game_get_text_of_enum_outcome(result), RESULT_GAME_POS_COLUMN, RESULT_GAME_POS_ROW);
+
+    menu_write_text_on_position(menu->lcdInfo, RESULT_GAME_TEXT, RESULT_GAME_TEXT_POS_COLUMN, RESULT_GAME_TEXT_POS_ROW);
+    menu_write_text_on_position(menu->lcdInfo, game_get_text_of_enum_outcome(result), RESULT_GAME_POS_COLUMN, RESULT_GAME_POS_ROW);
+    
+    switch (result)
+    {
+        case WON:
+            ESP_LOGI(MENU_TAG, "WON");
+            game_streak_up(gameInfo);
+            break;
+
+        case LOST:
+            ESP_LOGI(MENU_TAG, "LOST");
+            game_check_score(gameInfo);
+            game_reset_streak(gameInfo);
+            break;
+
+        case TIE:
+            ESP_LOGI(MENU_TAG, "TIE");
+            break;
+        
+        default:
+            //result nog correct, soemthing went wrong!
+            ESP_LOGI(MENU_TAG, "SOMETHING WENT WRONG!!!");
+            break;
+    }
+    menu_write_text_on_position(menu->lcdInfo, STREAK_TEXT, STREAK_TEXT_POS_COLUMN, STREAK_TEXT_POS_ROW);
+    menu_write_text_on_position(menu->lcdInfo, toString(gameInfo->streak), STREAK_SCORE_POS_COLUMN, STREAK_SCORE_POS_ROW);
+    
+    for(int i = AMOUNT_OF_SEC_SWITCH; i >= 0; i--){
+        ESP_LOGI(MENU_TAG, "WAITING SECONDS FOR SWICTH: %d", i);
+        vTaskDelay(AMOUNT_OF_MS/portTICK_RATE_MS);
+    }
+    menu_display_menu(menu, gameInfo);
+}
 
 
-void menu_handle_key_event(menu_t* menu, int key){
+void menu_handle_key_event(menu_t* menu, int key, game_t* gameInfo){
 
     menu_item_t* items;
     int maxIndex;
@@ -219,9 +283,12 @@ void menu_handle_key_event(menu_t* menu, int key){
 
     if(items != NULL){
         if(key == KEY_CLICKED){
+        if(menu->currentMenu == GAME && items[menu->currentMenuIndex].goingTo != MAIN){
+            menu_display_outcome(menu, menu->currentMenuIndex, gameInfo);
+        }
         menu->currentMenu = items[menu->currentMenuIndex].goingTo;
         menu->currentMenuIndex = MENU_START_INDEX;
-        menu_display_menu(menu);
+        menu_display_menu(menu, gameInfo);
         }
         else if(key == KEY_LEFT){
             menu_write_text_on_position(menu->lcdInfo, " ", CURSOR_POS_COLUMN, menu->currentMenuIndex);
