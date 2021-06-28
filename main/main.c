@@ -68,6 +68,8 @@ void menu_task(void* pvParameter){
     menu = menu_create_menu();
     menu_display_menu(menu);
 
+    qwiic_twist_start_task(qwiic_twist_rotary);
+
     while(1)
     {
         vTaskDelay(500 / portTICK_RATE_MS);
@@ -81,6 +83,7 @@ void app_main()
     ESP_ERROR_CHECK(nvs_flash_init());
     //nvs_flash_init();
     i2c_master_init();
+    set_rotary_encoder();
 
     //xTaskCreate(&hello_task, "hello_task", 2048, NULL, 5, NULL);
     xTaskCreate(&menu_task, "menu_task", 2048, NULL, 5, NULL);
@@ -88,29 +91,30 @@ void app_main()
 
 
 
-// /*
-//  * This method handles the key event "OK" (onButtonClicked), this is necessary for navigating through the menu.
-//  */
-// void clicked(void){
-//     ESP_LOGI(MAINTAG, "clicked rotary encoder");
-//     menu_handle_key_event(menu, KEY_CLICKED);
-// }
+/*
+ * This method handles the key event "OK" (onButtonClicked), this is necessary for navigating through the menu.
+ */
+void clicked(void){
+    ESP_LOGI(MAINTAG, "clicked rotary encoder");
+    menu_handle_key_event(menu, KEY_CLICKED);
+}
 
-// /*
-//  *  This method is not used. Its a placeholder method (onButtonPressed).
-//  */
-// void pressed(void){
-//     ESP_LOGI(MAINTAG, "pressed rotary encoder");
-// }
+/*
+ *  This method is not used. Its a placeholder method (onButtonPressed).
+ */
+void pressed(void){
+    ESP_LOGI(MAINTAG, "pressed rotary encoder");
+}
 
-// /*
-//  *  This method handles the key event turning left and right (onMoved). This is necessary for navigating through the menu, cause this is the scrolling event.
-//  */
-// void onMove(int16_t move_value){
-//     if(move_value > 0){
-//         menu_handle_key_event(menu, KEY_RIGHT);
-//     }
-//     else if(move_value < 0){
-//         menu_handle_key_event(menu, KEY_LEFT);
-//     }
-// }
+/*
+ *  This method handles the key event turning left and right (onMoved). This is necessary for navigating through the menu, cause this is the scrolling event.
+ */
+void onMove(int16_t move_value){
+    ESP_LOGI(MAINTAG, "moving...");
+    if(move_value > 0){
+        menu_handle_key_event(menu, KEY_RIGHT);
+    }
+    else if(move_value < 0){
+        menu_handle_key_event(menu, KEY_LEFT);
+    }
+}

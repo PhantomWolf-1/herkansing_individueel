@@ -44,7 +44,7 @@
 #define SCORE_MENU_ID_0 6 //-> back item, going back to main menu screen
 
 //menu start index by startup
-#define GAME_START_INDEX 0;
+#define MENU_START_INDEX 0
 
 //indexes of where the menu title places
 #define TITLE_ROW 0
@@ -54,6 +54,14 @@
 #define MENU_TEXT_ROW 0
 #define MENU_TEXT_COLUMN 0
 
+//define the postition of the cursor, only the column is necessary
+//besides a offset for the ROW position
+#define CURSOR_POS_COLUMN 9
+#define CURSOR_POS_OFFSET_ROW 1
+//define a value which the cursor moves per tick with the rotary encoder
+#define CURSOR_POS_MOVE 1
+
+
 enum menuType{MAIN, GAME, SCORE};
 
 typedef struct{
@@ -62,13 +70,12 @@ typedef struct{
     enum menuType goingTo;
     char* menuText;
     void (*KeyEvent[MAX_KEY_INPUTS])(void);
-    void (*MenuEntryEvent)(void);
 } menu_item_t;
 
 typedef struct{
     i2c_lcd1602_info_t* lcdInfo;
     enum menuType currentMenu; 
-    unsigned int currentMenuIndex;
+    int currentMenuIndex;
     menu_item_t* mainMenuItems;
     menu_item_t* gameMenuItems;
     menu_item_t* scoreMenuItems;
@@ -79,6 +86,8 @@ menu_t* menu_create_menu(void);
 void menu_free_all(menu_t* menu);
 void menu_write_menu_title(i2c_lcd1602_info_t* lcdInfo, enum menuType type);
 void menu_write_menu_text(i2c_lcd1602_info_t* lcdInfo, menu_t* menu);
+void menu_display_cursor(menu_t* menu);
+void menu_write_text_on_position(i2c_lcd1602_info_t* lcdInfo, char* text, int column, int row);
 void menu_welcome_message(menu_t* menu);
 void menu_display_menu(menu_t* menu);
 void menu_handle_key_event(menu_t* menu, int key);
