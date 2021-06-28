@@ -104,4 +104,6 @@ esp_err_t qwiic_twist_get_version(qwiic_twist_t* config, uint16_t* version);
 
 void changeRGB(qwiic_twist_t*, int R, int G, int B);
 
+void qwiic_twist_free_all(qwiic_twist_t* info);
+
 #endif

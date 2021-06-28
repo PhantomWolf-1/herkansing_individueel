@@ -5,5 +5,6 @@ set(COMPONENT_REQUIRES  nvs_flash
                         esp32-i2c-lcd1602 
                         esp32-i2c-rotaryEncoder 
                         menu
+                        game
                         )
 register_component()
