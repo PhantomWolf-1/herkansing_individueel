@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "menu.h"
-#include "esp_log.h"
+
 
 #define MENU_TAG "MENU"
 
@@ -116,27 +116,22 @@ static char * toString(int number) {
 
 void menu_write_menu_text(i2c_lcd1602_info_t* lcdInfo, menu_t* menu)
 {
-    int text_ROW = MENU_TEXT_ROW;
     i2c_lcd1602_move_cursor(lcdInfo, MENU_TEXT_COLUMN, MENU_TEXT_ROW);
     switch (menu->currentMenu){
     case MAIN:
-        for(int i = text_ROW; i < 2; i++){
+        for(int i = 0; i < MAX_MAIN_MENU_ITEMS; i++){
             menu_item_t item = menu->mainMenuItems[i];
+            i2c_lcd1602_move_cursor(lcdInfo, MENU_TEXT_COLUMN, MENU_TEXT_ROW + i);
             i2c_lcd1602_write_string(lcdInfo, item.menuText);
-            if(i == 0){
-                i2c_lcd1602_move_cursor(lcdInfo, MENU_TEXT_COLUMN, 0);
-            }else{
-                i2c_lcd1602_move_cursor(lcdInfo, MENU_TEXT_COLUMN, 1);
-            }
         }
         break;
 
     case GAME:
         for(int i = 0; i < MAX_GAME_MENU_ITEMS; i++){
-                menu_item_t item = menu->gameMenuItems[i];
-                i2c_lcd1602_write_string(lcdInfo, item.menuText);
-                i2c_lcd1602_move_cursor(lcdInfo, MENU_TEXT_COLUMN, MENU_TEXT_ROW + i);
-            }
+                    menu_item_t item = menu->gameMenuItems[i];
+                    i2c_lcd1602_write_string(lcdInfo, item.menuText);
+                    i2c_lcd1602_move_cursor(lcdInfo, MENU_TEXT_COLUMN, MENU_TEXT_ROW + i);
+                }
         break;
 
     case SCORE:
