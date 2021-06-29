@@ -57,7 +57,7 @@ void set_game_info(void){
 void free_all(){
     menu_free_all(menu);
     qwiic_twist_free_all(qwiic_twist_rotary);
-    //game shit free
+    game_free_all(gameInfo);
 }
 
 void menu_task(void* pvParameter){
@@ -70,20 +70,25 @@ void menu_task(void* pvParameter){
     {
         vTaskDelay(500 / portTICK_RATE_MS);
     }
-    menu_free_all(menu);
+    free_all();
     vTaskDelete(NULL);
 }
 
 void app_main()
 {
     ESP_ERROR_CHECK(nvs_flash_init());
-    //nvs_flash_init();
+    
+    //initialize the i2c master
     i2c_master_init();
+
+    //sets the seed for the random method different, so each time the application restarts the random values are different
     srand(time(0));
 
+    //initialize components
     set_rotary_encoder();
     set_game_info();
 
+    //start the task for the menu
     xTaskCreate(&menu_task, "menu_task", 2048, NULL, 5, NULL);
 }
 
