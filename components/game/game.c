@@ -5,29 +5,30 @@
 
 #include "game.h"
 
-
+//this method has no parameters, it returns a game_t* object 
 game_t* game_create_game(){
+    //allocate memory for the game_t struct object
     game_t* gameInfo = malloc(sizeof(game_t));
-    //creating a placeholder for the max score list, this comes in handy when shuffling the scores.
-    char* initScores[MAX_AMOUNT_OF_SCORES] = {"0", "0", "0"};
 
+    //checks if the memory allocation went correct
     if(gameInfo != NULL){
+        //set some default values as placeholders in the game_t struct
         gameInfo->streak = 0;
         gameInfo->highScore = 0;
-        // for(int i = 0; i < MAX_AMOUNT_OF_SCORES; i++){
-        //     gameInfo->maxScores[i] = initScores[i];
-        // }
     }
     
     return gameInfo;
 }
 
-
+//this method is private for this file, it generates a random number between the 0 and the maximum of choices that can be made. This returns a random number
 static unsigned int game_random_number(){
+    //initialize and calculate some value to generate a random number
     unsigned int min = 0;
     unsigned int max = MAX_AMOUNT_OF_CHOICES;
     unsigned int distance = (max - min);
     unsigned int randomNumber;
+
+    //this loop will go on until ir reaches a value that is bigger/even compare to a calculation for a minimum
     do {
         randomNumber = rand();
     } while(randomNumber >= (RAND_MAX - RAND_MAX % distance));
@@ -36,12 +37,16 @@ static unsigned int game_random_number(){
     return randomNumber;
 }
 
+//this method returns a random choice between ROCK,PAPER,SCISSORS. This is meant for the foe, to give a random choice against your choice
 enum choiceType game_get_choice_PC(){
     unsigned int randomNumber = game_random_number();
+
+    //the random number is equal to the values of the enum, they are in range
     enum choiceType enemyChoice = randomNumber; 
     return enemyChoice;
 }
 
+//checks the outcome of the round between two type of choices. This return a value of the enum outcome
 enum outcome game_check_outcome(enum choiceType myChoice, enum choiceType enemyChoice){
     enum outcome result = ERROR_OUTCOME;
 
@@ -83,14 +88,17 @@ enum outcome game_check_outcome(enum choiceType myChoice, enum choiceType enemyC
    
 }
 
+//this method adds a streak value to the streak the player has. Parameter is a game_t* object 
 void game_streak_up(game_t* gameInfo){
-    gameInfo->streak += 1;
+    gameInfo->streak += STREAK_UP_VALUE;
 }
 
+//this method resets the streak of the player. Parameter is a game_t* object
 void game_reset_streak(game_t* gameInfo){
     gameInfo->streak = 0;
 }
 
+//a toString method, this parses a number to a char*
 static char * toString(int number) {
     int length = snprintf(NULL, 0, "%d", number + 1);
     char *str = malloc(length + 1);
@@ -98,36 +106,14 @@ static char * toString(int number) {
     return str;
 }
 
+//this method checks if the current streak, which ended, is higher than the current highscore. If so, the current streak is the new highscore. Parameter is a game_t* object
 void game_check_score(game_t* gameInfo){
     if(gameInfo->streak > gameInfo->highScore){
         gameInfo->highScore = gameInfo->streak;
     }
-    // char* temp = toString(gameInfo->streak);
-    // char* tempList = calloc(MAX_AMOUNT_OF_CHOICES, sizeof(char*));
-    // memcpy(gameInfo->maxScores, tempList, MAX_AMOUNT_OF_SCORES * sizeof(char*));
-    
-    //for(int i = 0; i < MAX_AMOUNT_OF_SCORES; i++){
-        // if(gameInfo->maxScores[i] < temp){
-        //     char* tempSaved = gameInfo->maxScores[i];
-        //     if((i + 1) >= MAX_AMOUNT_OF_SCORES){
-        //         gameInfo->maxScores[i] = temp;
-        //     }
-        //     else{
-
-        //     }
-
-        //     int index = 0;
-        //     while(index < MAX_AMOUNT_OF_SCORES){
-
-        //         index++;
-        //     }
-        //     return;
-        // } 
-    //}
-    //free(temp);
 }
 
-
+//returns a char*. This returns text based on the type it is from the enum choiceType
 char* game_get_text_of_enum_choice(enum choiceType type){
     switch (type)
     {
@@ -141,6 +127,7 @@ char* game_get_text_of_enum_choice(enum choiceType type){
     return " ";
 }
 
+//returns a char*. This returns text based on the type it is from the enum outcome
 char* game_get_text_of_enum_outcome(enum outcome result){
     switch (result)
     {
