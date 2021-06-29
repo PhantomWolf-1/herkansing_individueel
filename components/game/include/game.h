@@ -19,11 +19,13 @@ enum outcome{WON, LOST, TIE, ERROR_OUTCOME};
 typedef struct{
     unsigned int streak;
     unsigned int highScore;
-    //char* maxScores[MAX_AMOUNT_OF_SCORES];
 } game_t;
 
 //creates a game_t object
 game_t* game_create_game();
+
+//free the memory for the game_t* object 
+void game_free_all(game_t* gameInfo);
 
 //generate a random choice for the foe
 enum choiceType game_get_choice_PC();

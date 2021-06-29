@@ -22,6 +22,13 @@ game_t* game_create_game(){
     return gameInfo;
 }
 
+//free the memory for the game_t* object 
+// Parameters:
+// - game_t* gameInfo: object that stores game information
+void game_free_all(game_t* gameInfo){
+    free(gameInfo);
+}
+
 //this method is private for this file, it generates a random number between the 0 and the maximum of choices that can be made. This returns a random number
 // Parameters:
 // - none
